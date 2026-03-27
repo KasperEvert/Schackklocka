@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="sv" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Schackklocka</title>
+  </head>
+  <body>
+    <button type="button" name="bBlack" id="bBlack" onclick="event_black()" value="toggled">
+      Swårtt
+    </button>
+    <button type="button" name="bWhite" id="bWhite" onclick="event_white()" value="!toggled">
+      Hwit
+    </button>
+
+    <style media="screen">
+      #bBlack {
+        background-color: black;
+        color: white;
+        right: 0;
+      }
+      #bWhite {
+        background-color: white;
+        position: absolute;
+        left: 0;
+      }
+      button {
+        width: 50vw;
+        height: 100vh;
+        top: 0;
+        position: absolute;
+        font-size: 7em;
+      }
+    </style>
+  </body>
+  <script type="text/javascript">
+    // https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
+    let wakeLock = null;
+    async function keepScreenAwake() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake lock aktiv');
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    }
+
+    keepScreenAwake();
+    screen.orientation.lock('landscape')
+      .then(() => console.log('Landscape låst'))
+      .catch(err => console.error(err));
+
+    class ChessTimer {
+      constructor(itemID) {
+        this.startTime = 0;
+        this.elapsedTime = 0;
+        this.interval = null;
+        this.label_id = itemID;
+        this.reset_str = "00:00:000";
+        this.has_been_toggled = false;
+      }
+      toggle() {
+        this.has_been_toggled = true;
+        if (this.interval) {
+          clearInterval(this.interval);
+          this.interval = null;
+          return;
+        }
+        // adjust so that it continues where it left off
+        this.startTime = Date.now() - this.elapsedTime;
+
+        this.interval = setInterval(() => {
+          this.elapsedTime = Date.now() - this.startTime;
+
+          let minutes = Math.floor(this.elapsedTime / 60000);
+          let seconds = Math.floor((this.elapsedTime % 60000) / 1000);
+          let milliseconds = this.elapsedTime % 1000;
+
+          document.getElementById(this.label_id).innerHTML =
+            String(minutes).padStart(2, "0") + ":" +
+            String(seconds).padStart(2, "0") + ":" +
+            String(milliseconds).padStart(3, "0");
+        }, 10);
+      }
+
+      reset() {
+        clearInterval(this.interval);
+        this.interval = null;
+        this.elapsedTime = 0;
+        document.getElementById(this.label_id).innerHTML = this.reset_str;
+        this.has_been_toggled = false;
+      }
+    }
+
+    const toggled = "toggled";
+    const not_toggled = "!toggled";
+    const bWhite = "bWhite";
+    const bBlack = "bBlack";
+    let timer_w = new ChessTimer(bWhite);
+    let timer_b = new ChessTimer(bBlack);
+    timer_w.reset_str = document.getElementById(bWhite).innerHTML;
+    timer_b.reset_str = document.getElementById(bBlack).innerHTML;
+    let counter_b = 0;
+
+    function tog_bool(to_get) { return document.getElementById(to_get).value == toggled; }
+
+    function toggle_clock() {
+      let btn_w = document.getElementById(bWhite);
+      let btn_b = document.getElementById(bBlack);
+      if (tog_bool(bWhite) || (!tog_bool(bWhite) && !tog_bool(bBlack))) {
+        btn_w.value = not_toggled;
+        btn_b.value = toggled;
+        if (timer_w.has_been_toggled) timer_w.toggle();
+        timer_b.toggle();
+      }
+      else if (tog_bool(bBlack) || (tog_bool(bWhite) && tog_bool(bBlack))) {
+        btn_w.value = toggled;
+        btn_b.value = not_toggled;
+        if (timer_b.has_been_toggled) timer_b.toggle();
+        timer_w.toggle();
+      }
+      //console.log(btn_w);
+      //console.log(btn_b);
+    }
+    function event_black() {
+      if (timer_w.has_been_toggled || timer_b.has_been_toggled) {
+        if (++counter_b >= 5) {
+          counter_b = 0;
+          timer_w.reset();
+          timer_b.reset();
+          document.getElementById(bWhite).value = not_toggled;
+          document.getElementById(bBlack).value = toggled;
+        }
+      }
+      if (!tog_bool(bBlack)) toggle_clock();
+    }
+
+    function event_white() {
+      counter_b = 0;
+      if (!tog_bool(bWhite)) toggle_clock();
+    }
+  </script>
+</html>
