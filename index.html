@@ -2,7 +2,6 @@
 <html lang="sv" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=0, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
     <title>Schackklocka</title>
   </head>
   <body>
@@ -105,7 +104,7 @@
       let has_been_reset = false;
 
       function tog_bool(to_get) { return document.getElementById(to_get).value == toggled; }
-      function is_first() { return !(timer_w.has_been_toggled && timer_b.has_been_toggled); }
+      function is_first() { return !(timer_w.has_been_toggled || timer_b.has_been_toggled); }
 
       function toggle_clock() {
         let btn_w = document.getElementById(bWhite);
