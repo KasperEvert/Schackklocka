@@ -2,6 +2,7 @@
 <html lang="sv" dir="ltr">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=0, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
     <title>Schackklocka</title>
   </head>
   <body>
@@ -101,8 +102,10 @@
       timer_w.reset_str = document.getElementById(bWhite).innerHTML;
       timer_b.reset_str = document.getElementById(bBlack).innerHTML;
       let counter_b = 0;
+      let has_been_reset = false;
 
       function tog_bool(to_get) { return document.getElementById(to_get).value == toggled; }
+      function is_first() { return !(timer_w.has_been_toggled && timer_b.has_been_toggled); }
 
       function toggle_clock() {
         let btn_w = document.getElementById(bWhite);
@@ -123,6 +126,11 @@
         //console.log(btn_b);
       }
       function event_black() {
+        if (is_first()) {
+          if (has_been_reset) return;
+          toggle_clock();
+          return;
+        }
         if (timer_w.has_been_toggled || timer_b.has_been_toggled) {
           if (++counter_b >= 5) {
             counter_b = 0;
@@ -130,14 +138,20 @@
             timer_b.reset();
             document.getElementById(bWhite).value = not_toggled;
             document.getElementById(bBlack).value = toggled;
+            has_been_reset = true;
+            return;
           }
         }
-        if (!tog_bool(bBlack)) toggle_clock();
+        if (!tog_bool(bWhite)) toggle_clock();
       }
 
       function event_white() {
+        if (is_first()) {
+          toggle_clock();
+          return;
+        }
         counter_b = 0;
-        if (!tog_bool(bWhite)) toggle_clock();
+        if (!tog_bool(bBlack)) toggle_clock();
       }
     </script>
   </body>
